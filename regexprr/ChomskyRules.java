@@ -7,7 +7,6 @@
  * and open the template in the editor.
  */
 
-//package regexp;
 
 import java.util.*;
 

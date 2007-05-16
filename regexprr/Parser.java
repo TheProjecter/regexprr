@@ -123,7 +123,7 @@ public class Parser
 			}
 		}
 
-		boolean validExpression = D[grammar.GetStartVarIndex()][0][n - 1];
+		boolean validExpression = n>0 && D[grammar.GetStartVarIndex()][0][n - 1];
 		
 		if (validExpression)
 		{
