@@ -13,11 +13,11 @@ import java.util.*;
 
 class ChomskyVarList
 {
-    ArrayList<Character> l;
+    ArrayList l;
     
     public ChomskyVarList()
     {
-        l = new ArrayList<Character>();
+    	l = new ArrayList();
     }
     
     public int GetSize()
@@ -32,7 +32,8 @@ class ChomskyVarList
     
     public char GetVar(int index)
     {
-        return l.get(index).charValue();
+    	Character ch = (Character)l.get(index);
+        return ch.charValue();
     }
     
     public int GetVarIndex(char varName)
@@ -41,7 +42,7 @@ class ChomskyVarList
         
         for(int i=0; i<l.size(); i++)
         {
-            if (l.get(i).charValue() == varName)
+            if (GetVar(i) == varName)
             {
                 varIndex = i;
                 
@@ -108,16 +109,16 @@ class ChomskyTwoVar
 public class ChomskyRules 
 {
     private ChomskyVarList varList;
-    private ArrayList<ChomskyTerminal> terminalList;
-    private ArrayList<ChomskyTwoVar> twoVarList;
+    private ArrayList terminalList;
+    private ArrayList twoVarList;
     int startIndex;
     
     /** Creates a new instance of ChomskyRules */
     public ChomskyRules() 
     {
         varList = new ChomskyVarList();
-        terminalList = new ArrayList<ChomskyTerminal>();
-        twoVarList = new ArrayList<ChomskyTwoVar>();    
+        terminalList = new ArrayList();
+        twoVarList = new ArrayList();    
         startIndex = -1;
     }
     
@@ -138,7 +139,7 @@ public class ChomskyRules
     
     public ChomskyTerminal GetTerminalRule(int terminalRuleIndex)
     {
-        return terminalList.get(terminalRuleIndex);
+        return (ChomskyTerminal)terminalList.get(terminalRuleIndex);
     }
     
     public int GetTwoVarRuleCount()
@@ -148,7 +149,7 @@ public class ChomskyRules
     
     public ChomskyTwoVar GetTwoVarRule(int twoVarRuleIndex)
     {
-        return twoVarList.get(twoVarRuleIndex);
+        return (ChomskyTwoVar)twoVarList.get(twoVarRuleIndex);
     }
     
     public void AddVar(char varName)
@@ -166,12 +167,14 @@ public class ChomskyRules
     
     public boolean IsRule(int varIndex, char terminal)
     {
-        for(int i=0; i<terminalList.size(); i++)
+    	int terminalCount = terminalList.size();
+    	
+        for(int i=0; i<terminalCount; i++)
         {
-            //System.out.println(""+varList.GetVar(varIndex)+"->"+terminal+" == "+varList.GetVar(terminalList.get(i).GetVarIndex())+"->"+terminalList.get(i).GetTerminal()+"? ");
-            if (terminalList.get(i).GetTerminal() == terminal && terminalList.get(i).GetVarIndex() == varIndex)
+        	ChomskyTerminal t = GetTerminalRule(i);
+
+        	if (t.GetTerminal() == terminal && t.GetVarIndex() == varIndex)
             {
-                //System.out.println("Yes.");
                 return true;
             }
         }
@@ -330,9 +333,11 @@ public class ChomskyRules
     
     public void PrintTerminalRules()
     {
-        for(int i=0; i<terminalList.size(); i++)
+    	int terminalCount = terminalList.size();
+    	
+        for(int i=0; i<terminalCount; i++)
         {
-            ChomskyTerminal t = terminalList.get(i);
+            ChomskyTerminal t = GetTerminalRule(i);
             
             char varName = varList.GetVar(t.GetVarIndex());
             
@@ -342,9 +347,11 @@ public class ChomskyRules
     
     public void PrintTwoVarRules()
     {
-        for(int i=0; i<twoVarList.size(); i++)
+    	int twoVarCount = twoVarList.size();
+    	
+        for(int i=0; i<twoVarCount; i++)
         {
-            ChomskyTwoVar t = twoVarList.get(i);
+            ChomskyTwoVar t = GetTwoVarRule(i);
             
             char varHeadName = varList.GetVar(t.GetVarHeadIndex());
             char varLeftName = varList.GetVar(t.GetVarLeftIndex());
