@@ -7,7 +7,7 @@
  * and open the template in the editor.
  */
 
-//package regexp;
+
 /**
  *
  * @author neimod
@@ -26,8 +26,6 @@ public class Main
 	public static void main(String[] args)
 	{
 		Parser p = new Parser("a*.b|c");
-		
-		
 	}
 
 }
