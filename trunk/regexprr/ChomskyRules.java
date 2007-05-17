@@ -57,6 +57,7 @@ class ChomskyTerminal
 {
     private int varIndex;
     private char terminal;
+    
     public ChomskyTerminal(int nVarIndex, char nTerminal)
     {   
         varIndex = nVarIndex;
