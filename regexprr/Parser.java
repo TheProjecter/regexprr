@@ -1,8 +1,149 @@
+class Node
+{
+	private Node left, right;
+	private char label;
+	private int id;
+	
+	public Node()
+	{
+		left = null;
+		right = null;
+	}
+	
+	public void SetLeft(Node node)
+	{
+		left = node;
+	}
+	
+	public void SetRight(Node node)
+	{
+		right = node;
+	}
+	
+	public Node GetLeft()
+	{
+		return left;
+	}
+	
+	public Node GetRight()
+	{
+		return right;
+	}
+	
+	public void SetLabel(char l)
+	{
+		label = l;
+	}
+	
+	public char GetLabel()
+	{
+		return label;
+	}
+	
+	public void SetId(int i)
+	{
+		id = i;
+	}
+	
+	public int GetId()
+	{
+		return id;
+	}
+}
+
 class Tree
 {
+	private Node root;
+	
 	public Tree()
 	{
-	 
+		root = new Node();
+	}
+	
+	public Node GetRootNode()
+	{
+		return root;
+	}
+	
+	public void AddLeftNode(Node parent, Node child)
+	{
+		if (parent == null)
+		{
+			parent = root;
+		}
+		
+		parent.SetLeft(child);
+	}
+	
+	public void AddRightNode(Node parent, Node child)
+	{
+		if (parent == null)
+		{
+			parent = root;
+		}
+		
+		parent.SetRight(child);
+	}
+	
+	// Write out tree in dot form
+	public String ToDot()
+	{
+		IdentifyNodesRecur(root, 0);
+		
+		String s = "digraph g {\n\n";
+		
+		s += IdentifiersToDot(root, "");
+		s += "\n";
+		
+		s += NodesToDot(root, root.GetLeft(), ""); 
+		s += NodesToDot(root, root.GetRight(), "");
+		
+		s += "}";
+		
+		
+		return s;
+	}
+	
+	// Give each node a unique id
+	private int IdentifyNodesRecur(Node n, int lastId)
+	{
+		if (n != null)
+		{
+			n.SetId(lastId++);
+			
+			lastId = IdentifyNodesRecur(n.GetLeft(), lastId);
+			lastId = IdentifyNodesRecur(n.GetRight(), lastId);
+		}
+		
+		return lastId;
+	}
+	
+	// Write out nodes nX = [label="Z"]
+	private String IdentifiersToDot(Node n, String s)
+	{
+		if (n != null)
+		{
+			s += "n"+n.GetId()+" [label=\""+n.GetLabel()+"\"];\n";
+			
+			s = IdentifiersToDot(n.GetLeft(), s);
+			s = IdentifiersToDot(n.GetRight(), s);
+		}
+		
+		return s;
+	}
+	
+	// Write out nX->nY nodes
+	private String NodesToDot(Node parent, Node child, String s)
+	{
+		if (child != null)
+		{
+			s += "n"+parent.GetId()+"->n"+child.GetId()+";\n";
+			
+			s = NodesToDot(child, child.GetLeft(), s);
+			s = NodesToDot(child, child.GetRight(), s);
+		}
+		
+		return s;
 	}
 }
  
@@ -10,11 +151,17 @@ public class Parser
 {
 	private ChomskyRules grammar;
 	private Tree parseTree;
+	private boolean[][][] D;
+	private int[][][] L;
+	private int[][][] M;
+	private int[][][] R;
 	
 	public Parser(String pattern)
 	{
 		InitGrammar();
 		parseTree = CYK(pattern);
+		
+		System.out.println(parseTree.ToDot());
 	}
 	
 	public Tree GetParseTree()
@@ -71,10 +218,10 @@ public class Parser
 		int n = pattern.length();
 		int varCount = grammar.GetVarCount();
 
-		boolean[][][] D = new boolean[varCount][n][n];
-		int[][][] L = new int[varCount][n][n];
-		int[][][] M = new int[varCount][n][n];
-		int[][][] R = new int[varCount][n][n];
+		D = new boolean[varCount][n][n];
+		L = new int[varCount][n][n];
+		M = new int[varCount][n][n];
+		R = new int[varCount][n][n];
 
 		for (int l = 0; l < varCount; l++)
 		{
@@ -122,8 +269,10 @@ public class Parser
 				}
 			}
 		}
+		
+		int startVar = grammar.GetStartVarIndex();
 
-		boolean validExpression = n>0 && D[grammar.GetStartVarIndex()][0][n - 1];
+		boolean validExpression = n>0 && D[startVar][0][n - 1];
 		
 		if (validExpression)
 		{
@@ -133,6 +282,33 @@ public class Parser
 			System.out.println("Not a regular expression");
 		}
 		
-		return new Tree();
+		Tree tree = new Tree();
+		
+		BuildParseTree(tree.GetRootNode(), startVar, 0, n-1, pattern);
+		
+		return tree;
+	}
+	
+	private void BuildParseTree(Node m, int A, int i, int j, String pattern)
+	{
+		m.SetLabel(grammar.VarIndexToChar(A));
+		
+		if (i == j)
+		{
+			Node n = new Node();
+			n.SetLabel(pattern.charAt(i));
+			
+			m.SetLeft(n);
+		}
+		else
+		{
+			Node n1 = new Node();
+			Node n2 = new Node();
+			
+			m.SetLeft(n1);
+			m.SetRight(n2);
+			BuildParseTree(n1, L[A][i][j], i, M[A][i][j], pattern);
+			BuildParseTree(n2, R[A][i][j], M[A][i][j]+1, j, pattern);
+		}
 	}
 }
