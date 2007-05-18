@@ -146,6 +146,14 @@ class Tree
 		return s;
 	}
 }
+
+class ParseException extends Exception
+{
+	public ParseException(String msg)
+	{
+		super(msg);
+	}
+}
  
 public class Parser
 {
@@ -156,12 +164,10 @@ public class Parser
 	private int[][][] M;
 	private int[][][] R;
 	
-	public Parser(String pattern)
+	public Parser(String pattern) throws ParseException
 	{
 		InitGrammar();
 		parseTree = CYK(pattern);
-		
-		System.out.println(parseTree.ToDot());
 	}
 	
 	public Tree GetParseTree()
@@ -213,7 +219,7 @@ public class Parser
 	}
 
  
-	private Tree CYK(String pattern)
+	private Tree CYK(String pattern) throws ParseException
 	{
 		int n = pattern.length();
 		int varCount = grammar.GetVarCount();
@@ -274,19 +280,80 @@ public class Parser
 
 		boolean validExpression = n>0 && D[startVar][0][n - 1];
 		
-		if (validExpression)
+		if (!validExpression)
 		{
-			System.out.println("Yes, it is a regular expression");
-		} else
-		{
-			System.out.println("Not a regular expression");
+			throw new ParseException("Not a regular expression");
 		}
 		
 		Tree tree = new Tree();
 		
 		BuildParseTree(tree.GetRootNode(), startVar, 0, n-1, pattern);
 		
+		System.out.println(tree.ToDot());
+		
+		ConvertToExpressionTree(tree.GetRootNode());
+		
+		System.out.println(tree.ToDot());
+		
 		return tree;
+	}
+	
+	private void ConvertToExpressionTree(Node n)
+	{
+		if (n == null)
+		{
+			return;
+		}
+
+		Node operator = n.GetRight();
+		
+		if (operator != null)
+		{
+			Node left = n.GetLeft();
+			Node right = n.GetRight().GetRight();
+			
+			operator = n.GetRight().GetLeft();
+
+			while(operator != null && operator.GetLeft() != null && operator.GetRight() != null)
+			{
+					left = operator.GetLeft();
+					right = operator.GetRight().GetRight();
+					
+					operator = operator.GetRight().GetLeft();
+			}
+			
+			while(operator != null && operator.GetLeft() != null)
+			{
+				operator = operator.GetLeft();
+			}
+			
+			// if operator is null then we did not get a valid parse tree
+			if (operator != null)
+			{
+				n.SetLabel(operator.GetLabel());		
+				n.SetLeft(left);
+				n.SetRight(right);
+				
+				ConvertToExpressionTree(left);
+				ConvertToExpressionTree(right);
+				
+				if (left != null && left.GetLabel() == '(')
+					n.SetLeft(null);
+				if (right != null && right.GetLabel() == ')')
+					n.SetRight(null);
+			}
+		}
+		else
+		{
+			Node terminal = n;
+			
+			while(terminal.GetLeft() != null)
+			{
+				terminal = terminal.GetLeft();
+			}
+			n.SetLabel(terminal.GetLabel());
+			n.SetLeft(null);
+		}
 	}
 	
 	private void BuildParseTree(Node m, int A, int i, int j, String pattern)
