@@ -9,7 +9,7 @@ class ParseException extends Exception
 public class Parser
 {
 	private ChomskyRules grammar;
-	private Tree parseTree;
+	private BinaryTree parseBinaryTree;
 	private boolean[][][] D;
 	private int[][][] L;
 	private int[][][] M;
@@ -18,12 +18,12 @@ public class Parser
 	public Parser(String pattern) throws ParseException
 	{
 		InitGrammar();
-		parseTree = CYK(pattern);
+		parseBinaryTree = CYK(pattern);
 	}
 	
-	public Tree GetParseTree()
+	public BinaryTree GetParseBinaryTree()
 	{
-		return parseTree;
+		return parseBinaryTree;
 	}
 	 
 	private void InitGrammar()
@@ -70,7 +70,7 @@ public class Parser
 	}
 
  
-	private Tree CYK(String pattern) throws ParseException
+	private BinaryTree CYK(String pattern) throws ParseException
 	{
 		int n = pattern.length();
 		int varCount = grammar.GetVarCount();
@@ -136,32 +136,32 @@ public class Parser
 			throw new ParseException("Not a regular expression");
 		}
 		
-		Tree tree = new Tree();
+		BinaryTree tree = new BinaryTree();
 		
-		BuildParseTree(tree.GetRootNode(), startVar, 0, n-1, pattern);
+		BuildParseBinaryTree(tree.GetRootBinaryNode(), startVar, 0, n-1, pattern);
 		
 		System.out.println(tree.ToDot());
 		
-		ConvertToExpressionTree(tree.GetRootNode());
+		ConvertToExpressionBinaryTree(tree.GetRootBinaryNode());
 		
 		System.out.println(tree.ToDot());
 		
 		return tree;
 	}
 	
-	private void ConvertToExpressionTree(Node n)
+	private void ConvertToExpressionBinaryTree(BinaryNode n)
 	{
 		if (n == null)
 		{
 			return;
 		}
 
-		Node operator = n.GetRight();
+		BinaryNode operator = n.GetRight();
 		
 		if (operator != null)
 		{
-			Node left = n.GetLeft();
-			Node right = n.GetRight().GetRight();
+			BinaryNode left = n.GetLeft();
+			BinaryNode right = n.GetRight().GetRight();
 			
 			operator = n.GetRight().GetLeft();
 
@@ -185,8 +185,8 @@ public class Parser
 				n.SetLeft(left);
 				n.SetRight(right);
 				
-				ConvertToExpressionTree(left);
-				ConvertToExpressionTree(right);
+				ConvertToExpressionBinaryTree(left);
+				ConvertToExpressionBinaryTree(right);
 				
 				if (left != null && left.GetLabel() == '(')
 					n.SetLeft(null);
@@ -196,7 +196,7 @@ public class Parser
 		}
 		else
 		{
-			Node terminal = n;
+			BinaryNode terminal = n;
 			
 			while(terminal.GetLeft() != null)
 			{
@@ -207,26 +207,26 @@ public class Parser
 		}
 	}
 	
-	private void BuildParseTree(Node m, int A, int i, int j, String pattern)
+	private void BuildParseBinaryTree(BinaryNode m, int A, int i, int j, String pattern)
 	{
 		m.SetLabel(grammar.VarIndexToChar(A));
 		
 		if (i == j)
 		{
-			Node n = new Node();
+			BinaryNode n = new BinaryNode();
 			n.SetLabel(pattern.charAt(i));
 			
 			m.SetLeft(n);
 		}
 		else
 		{
-			Node n1 = new Node();
-			Node n2 = new Node();
+			BinaryNode n1 = new BinaryNode();
+			BinaryNode n2 = new BinaryNode();
 			
 			m.SetLeft(n1);
 			m.SetRight(n2);
-			BuildParseTree(n1, L[A][i][j], i, M[A][i][j], pattern);
-			BuildParseTree(n2, R[A][i][j], M[A][i][j]+1, j, pattern);
+			BuildParseBinaryTree(n1, L[A][i][j], i, M[A][i][j], pattern);
+			BuildParseBinaryTree(n2, R[A][i][j], M[A][i][j]+1, j, pattern);
 		}
 	}
 }

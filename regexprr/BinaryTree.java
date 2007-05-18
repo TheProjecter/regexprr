@@ -1,31 +1,31 @@
-class Node
+class BinaryNode
 {
-	private Node left, right;
+	private BinaryNode left, right;
 	private char label;
 	private int id;
 	
-	public Node()
+	public BinaryNode()
 	{
 		left = null;
 		right = null;
 	}
 	
-	public void SetLeft(Node node)
+	public void SetLeft(BinaryNode node)
 	{
 		left = node;
 	}
 	
-	public void SetRight(Node node)
+	public void SetRight(BinaryNode node)
 	{
 		right = node;
 	}
 	
-	public Node GetLeft()
+	public BinaryNode GetLeft()
 	{
 		return left;
 	}
 	
-	public Node GetRight()
+	public BinaryNode GetRight()
 	{
 		return right;
 	}
@@ -51,21 +51,21 @@ class Node
 	}
 }
 
-public class Tree
+public class BinaryTree
 {
-	private Node root;
+	private BinaryNode root;
 	
-	public Tree()
+	public BinaryTree()
 	{
-		root = new Node();
+		root = new BinaryNode();
 	}
 	
-	public Node GetRootNode()
+	public BinaryNode GetRootBinaryNode()
 	{
 		return root;
 	}
 	
-	public void AddLeftNode(Node parent, Node child)
+	public void AddLeftBinaryNode(BinaryNode parent, BinaryNode child)
 	{
 		if (parent == null)
 		{
@@ -75,7 +75,7 @@ public class Tree
 		parent.SetLeft(child);
 	}
 	
-	public void AddRightNode(Node parent, Node child)
+	public void AddRightBinaryNode(BinaryNode parent, BinaryNode child)
 	{
 		if (parent == null)
 		{
@@ -88,15 +88,15 @@ public class Tree
 	// Write out tree in dot form
 	public String ToDot()
 	{
-		IdentifyNodesRecur(root, 0);
+		IdentifyBinaryNodesRecur(root, 0);
 		
 		String s = "digraph g {\n\n";
 		
 		s += IdentifiersToDot(root, "");
 		s += "\n";
 		
-		s += NodesToDot(root, root.GetLeft(), ""); 
-		s += NodesToDot(root, root.GetRight(), "");
+		s += BinaryNodesToDot(root, root.GetLeft(), ""); 
+		s += BinaryNodesToDot(root, root.GetRight(), "");
 		
 		s += "}";
 		
@@ -105,21 +105,21 @@ public class Tree
 	}
 	
 	// Give each node a unique id
-	private int IdentifyNodesRecur(Node n, int lastId)
+	private int IdentifyBinaryNodesRecur(BinaryNode n, int lastId)
 	{
 		if (n != null)
 		{
 			n.SetId(lastId++);
 			
-			lastId = IdentifyNodesRecur(n.GetLeft(), lastId);
-			lastId = IdentifyNodesRecur(n.GetRight(), lastId);
+			lastId = IdentifyBinaryNodesRecur(n.GetLeft(), lastId);
+			lastId = IdentifyBinaryNodesRecur(n.GetRight(), lastId);
 		}
 		
 		return lastId;
 	}
 	
 	// Write out nodes nX = [label="Z"]
-	private String IdentifiersToDot(Node n, String s)
+	private String IdentifiersToDot(BinaryNode n, String s)
 	{
 		if (n != null)
 		{
@@ -133,14 +133,14 @@ public class Tree
 	}
 	
 	// Write out nX->nY nodes
-	private String NodesToDot(Node parent, Node child, String s)
+	private String BinaryNodesToDot(BinaryNode parent, BinaryNode child, String s)
 	{
 		if (child != null)
 		{
 			s += "n"+parent.GetId()+"->n"+child.GetId()+";\n";
 			
-			s = NodesToDot(child, child.GetLeft(), s);
-			s = NodesToDot(child, child.GetRight(), s);
+			s = BinaryNodesToDot(child, child.GetLeft(), s);
+			s = BinaryNodesToDot(child, child.GetRight(), s);
 		}
 		
 		return s;

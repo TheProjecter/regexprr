@@ -30,7 +30,7 @@ public class Main
 		//Parser p = new Parser("(a*)");
 		try
 		{
-			Parser p = new Parser("a*.(b.b).(b.b).((b.(b)))");
+			Parser p = new Parser("a<.(b.b).(b.b).((b.(b)))");
 		} catch(ParseException e)
 		{
 			System.out.println("Error: "+e.getMessage());
