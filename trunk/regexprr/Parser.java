@@ -140,11 +140,11 @@ public class Parser
 		
 		BuildParseBinaryTree(tree.GetRootBinaryNode(), startVar, 0, n-1, pattern);
 		
-		System.out.println(tree.ToDot());
+		//System.out.println(tree.ToDot());
 		
 		ConvertToExpressionBinaryTree(tree.GetRootBinaryNode());
 		
-		System.out.println(tree.ToDot());
+		//System.out.println(tree.ToDot());
 		
 		return tree;
 	}
