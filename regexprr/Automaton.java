@@ -141,11 +141,27 @@ class AutomatonNode
 	private ArrayList edges;
 	private ArrayList epsilonEdges;
 	private int id;
+	private boolean accept;
 	
 	public AutomatonNode()
 	{
 		edges = new ArrayList();
 		epsilonEdges = new ArrayList();
+	}
+	
+	public void SetAccept()
+	{
+		accept = true;
+	}
+	
+	public void UnsetAccept()
+	{
+		accept = false;
+	}
+	
+	public boolean IsAccepted()
+	{
+		return accept;
 	}
 	
 	public void ClearEpsilonEdges()
@@ -227,7 +243,7 @@ class AutomatonNode
 	{
 		return id;
 	}
-/*	
+	
 	public AutomatonNode GetNodeViaTerminal(char terminal)
 	{
 		for(int i=0; i<GetEdgeCount(); i++)
@@ -240,7 +256,6 @@ class AutomatonNode
 		
 		return null;
 	}
-*/	
 }
 
 public class Automaton
@@ -249,308 +264,10 @@ public class Automaton
 	private ArrayList nodes;
 	private ArrayList acceptNodes;
 	private ArrayList alphabet;
-	
-	
-	public void Init()
-	{
-		nodes = new ArrayList();
-		acceptNodes = new ArrayList();
-		alphabet = new ArrayList();
-	}
-	
-	public AutomatonNode NewAutomatonNode()
-	{
-		AutomatonNode n = new AutomatonNode();
-		
-		nodes.add(n);
-		
-		return n;
-	}
-	
-	private AutomatonNodeSet EpsilonDirectReach(AutomatonNode n)
-	{
-		AutomatonNodeSet set = new AutomatonNodeSet();
-		
-		for(int i=0; i<n.GetEpsilonEdgeCount(); i++)
-		{
-			AutomatonEdge e = n.GetEpsilonEdge(i);
-			
-			set.AddNode(e.GetEndNode());
-		}
-		
-		return set;
-	}
-	
-	/*private ArrayList EpsilonWideReach(AutomatonNode n)
-	{
-		
-	}*/
-	
-	public void RemoveEpsilonEdges()
-	{
-		for(int i=0; i<GetNodeCount(); i++)
-		{
-			GetNode(i).ClearEpsilonEdges();
-		}
-	}
-	
-	private AutomatonNodeSet[] GetEpsilonReachableSet()
-	{
-		AutomatonNodeSet[] sets = new AutomatonNodeSet[GetNodeCount()];
-		
-		for(int i=0; i<GetNodeCount(); i++)
-		{
-			AutomatonNode n = GetNode(i);
 
-			sets[i] = EpsilonDirectReach(n);
-			AutomatonNodeSet set = sets[i];
-			
-			for(int j=0; j<set.GetNodeCount(); j++)
-			{
-				AutomatonNodeSet newset = EpsilonDirectReach(set.GetNode(j));
-				
-				set.Union(newset);
-			}
-		}
-		
-		return sets;
-	}
-	
-	public void FixupEpsilons(AutomatonNodeSet[] sets)
-	{
-		for(int i=0; i<GetNodeCount(); i++)
-		{
-			AutomatonNode n = GetNode(i);
-			
-			for(int j=0; j<n.GetEdgeCount(); j++)
-			{
-				AutomatonEdge e = n.GetEdge(j);
-				
-				//e.GetTerminal()
-				AutomatonNodeSet set = sets[e.GetEndNode().GetId()];
-				//System.out.print("Reachable from node "+e.GetEndNode().GetId()+": ");
-				for(int k=0; k<set.GetNodeCount(); k++)
-				{
-					//System.out.println
-					//System.out.print(""+set.GetNode(k).GetId()+",");
-					n.AddEdge(e.GetTerminal(), set.GetNode(k));
-				}
-				//System.out.println();
-			}
-		}		
-	}
-	
-	private void Test(ArrayList powerSet, AutomatonNodeSet set)
-	{
-		AutomatonNodeSet[] nextSet  = new AutomatonNodeSet[GetAlphabetSize()];
-		
-		for(int i=0; i<nextSet.length; i++)
-		{
-			nextSet[i] = new AutomatonNodeSet();
-		}
-
-
-		for(int i=0; i<set.GetNodeCount(); i++)
-		{
-			AutomatonNode n = set.GetNode(i);
-			
-			for(int j=0; j<n.GetEdgeCount(); j++)
-			{
-				AutomatonEdge e = n.GetEdge(j);
-				
-				for(int k=0; k<GetAlphabetSize(); k++)
-				{
-					char c = GetAlphabetChar(k);
-					
-					if (e.GetTerminal() == c)
-						nextSet[k].AddNode(e.GetEndNode());
-				}
-			}
-		}
-		
-		AutomatonNode parentPowerNode = set.GetPowerNode();
-		for(int k=0; k<GetAlphabetSize(); k++)
-		{
-			boolean found = false;
-			for(int i=0; i<powerSet.size(); i++)
-			{
-				AutomatonNodeSet t = (AutomatonNodeSet)powerSet.get(i);
-				
-				if (nextSet[k].Equals(t))
-				{
-					found = true;
-					nextSet[k].SetPowerNode(t.GetPowerNode());
-					break;
-				}
-			}
-			
-			if (!found)
-			{
-				nextSet[k].SetPowerNode(new AutomatonNode());
-				powerSet.add(nextSet[k]);
-				
-				
-				Test(powerSet, nextSet[k]);
-			}
-			
-			AutomatonNode childPowerNode = nextSet[k].GetPowerNode(); 
-			
-			parentPowerNode.AddEdge(GetAlphabetChar(k), childPowerNode);
-		}
-		
-	}
-	
 	private Automaton()
 	{
 		Init();
-	}
-	
-	public void ConvertToDFA()
-	{
-		IdentifyNodes();
-		
-		AutomatonNodeSet[] sets = GetEpsilonReachableSet();
-		
-		RemoveEpsilonEdges();
-		
-		FixupEpsilons(sets);
-		
-		AutomatonNodeSet startSet = sets[start.GetId()];
-		startSet.AddNode(start);
-		
-		System.out.println(startSet.ToString());
-		
-		ArrayList l = new ArrayList();
-		
-		//Automaton DFA = new Automaton();
-		//DFA.start = new AutomatonNode();
-		AutomatonNode dfaStart = new AutomatonNode();
-		startSet.SetPowerNode(dfaStart);
-		l.add(startSet);
-		Test(l, startSet);
-		
-		Automaton dfa = new Automaton();
-		
-		for(int i=0; i<l.size(); i++)
-		{
-			AutomatonNodeSet t = (AutomatonNodeSet)l.get(i);
-			
-			AutomatonNode node = t.GetPowerNode();
-			
-			for(int j=0; j<acceptNodes.size(); j++)
-			{
-				AutomatonNode acceptNode = (AutomatonNode)acceptNodes.get(j);
-				
-				if (t.Contains(acceptNode))
-				{
-					dfa.acceptNodes.add(node);
-				}
-			}
-			
-			dfa.nodes.add(node);
-		}
-		
-		dfa.start = dfaStart;
-		
-		
-		
-		dfa.ToDot();
-		/*
-		AutomatonNodeSet[] setVia  = new AutomatonNodeSet[GetAlphabetSize()];
-		
-		for(int i=0; i<setVia.length; i++)
-		{
-			setVia[i] = new AutomatonNodeSet();
-		}
-		
-		for(int i=0; i<startSet.GetNodeCount(); i++)
-		{
-			AutomatonNode n = startSet.GetNode(i);
-			
-			for(int j=0; j<n.GetEdgeCount(); j++)
-			{
-				AutomatonEdge e = n.GetEdge(j);
-				
-				for(int k=0; k<GetAlphabetSize(); k++)
-				{
-					char c = GetAlphabetChar(k);
-					if (e.GetTerminal() == c)
-						setVia[k].AddNode(e.GetEndNode());
-				}
-			}
-		}
-		
-		for(int k=0; k<GetAlphabetSize(); k++)
-		{
-			char c = GetAlphabetChar(k);
-			
-			System.out.println("Next via "+c+": "+setVia[k].ToString());
-		}
-*/
-		/*
-		AutomatonNodeSet set = sets[start.GetId()];
-		System.out.print("Reachable from node "+start.GetId()+": ");
-		for(int k=0; k<set.GetNodeCount(); k++)
-		{
-			//System.out.println
-			System.out.print(""+set.GetNode(k).GetId()+",");
-			start.AddEdge(e.GetTerminal(), set.GetNode(k));
-		}
-		System.out.println();
-		*/
-		
-		/*
-		for(int i=0; i<GetNodeCount(); i++)
-		{
-			AutomatonNodeSet set = sets[i];
-			
-			System.out.print("Reachable from node "+GetNode(i).GetId()+": ");
-			for(int j=0; j<set.GetNodeCount(); j++)
-			{
-				System.out.print(""+set.GetNode(j).GetId()+",");
-			}
-			System.out.println();
-		}
-		*/
-		/*
-		for(int i=0; i<GetNodeCount(); i++)
-		{
-			AutomatonNodeSet set = sets[i];
-			
-			for(int j=0; j<set.GetNodeCount(); j++)
-			{
-				int id = set.GetNode(j).GetId();
-				
-				if (id > i && !set.Union( sets[id] ))
-					break;
-			}
-		}*/
-		
-		
-		/*
-		// Remove epsilon-edges
-		for(int i=0; i<GetNodeCount(); i++)
-		{
-			AutomatonNode n = GetNode(i);
-			
-			for(int j=0; j<n.GetEdgeCount(); j++)
-			{
-				AutomatonEdge e = n.GetEdge(j);
-				
-				AutomatonNode next = e.GetEndNode();
-
-				for(int k=0; k<next.GetEdgeCount(); k++)
-				{
-					AutomatonEdge enext = next.GetEdge(k);
-					
-					if (enext.GetTerminal() == '$')
-					{
-						//n.AddEdge(e.GetTerminal(), next);
-					}
-				}
-			}
-		}
-		*/
 	}
 	
 	public Automaton(char operation, Automaton a)
@@ -562,89 +279,15 @@ public class Automaton
 			case '*':
 				Kleene(a);
 			break;
-		}
-	}
-	
-	private int GetAlphabetSize()
-	{
-		return alphabet.size();
-	}
-	
-	private char GetAlphabetChar(int i)
-	{
-		return ((Character)alphabet.get(i)).charValue();
-	}
-	
-	private void AddToAlphabet(char c)
-	{
-		boolean found = false;
-		
-		for(int j=0; j<GetAlphabetSize(); j++)
-		{
-			char k = GetAlphabetChar(j);
 			
-			if (k == c)
-			{
-				found = true;
-				break;
-			}
-		}
-		
-		if (!found)
-			alphabet.add(new Character(c));
-	}
-	
-	private void UnionAlphabet(Automaton a)
-	{
-		for(int i=0; i<a.GetAlphabetSize(); i++)
-		{
-			char c = a.GetAlphabetChar(i);
-			
-			AddToAlphabet(c);
-		}
-	}
-	
-	private void IntersectAlphabet(Automaton a1, Automaton a2)
-	{
-		for(int i=0; i<a1.GetAlphabetSize(); i++)
-		{
-			char c = a1.GetAlphabetChar(i);
-			
-			for(int j=0; j<a2.GetAlphabetSize(); j++)
-			{
-				char k = a2.GetAlphabetChar(j);
-				
-				if (c == k)
-				{
-					AddToAlphabet(c);
-				}
-			}
-		}
-	}
-	
-	private void Kleene(Automaton a)
-	{
-		start = NewAutomatonNode();
+			case '<':
+				Complement(a);
+			break;
 
-		AddAcceptNode(start);
-		
-		AddAllNodes(a);
-		AddAllAcceptNodes(a);
-		
-		start.AddEdge('$', a.GetStartNode());
-		
-		for(int i=0; i<a.GetAcceptNodeCount(); i++)
-		{
-			AutomatonNode n = a.GetAcceptNode(i);
-			
-			n.AddEdge('$', a.GetStartNode());
 		}
-		
-		//AddToAlphabet('$');
-		UnionAlphabet(a);
 	}
 	
-	
+
 	
 	public Automaton(char operation, Automaton a1, Automaton a2)
 	{
@@ -666,158 +309,7 @@ public class Automaton
 		}
 	}
 	
-	private AutomatonNode GetStartNode()
-	{
-		return start;
-	}
-	
-	private void AddAllNodes(Automaton a)
-	{
-		for(int i=0; i<a.GetNodeCount(); i++)
-		{
-			nodes.add( a.GetNode(i) );
-		}
-	}
-	
-	private void AddAllAcceptNodes(Automaton a)
-	{
-		for(int i=0; i<a.GetAcceptNodeCount(); i++)
-		{
-			AddAcceptNode(a.GetAcceptNode(i));
-		}
-	}
-	
-	private void Union(Automaton a1, Automaton a2)
-	{
-		start = NewAutomatonNode();
-		
-		AddAllNodes(a1);
-		AddAllNodes(a2);
-		
-		
-		start.AddEdge('$', a1.GetStartNode());
-		start.AddEdge('$', a2.GetStartNode());
-		
-		AddAllAcceptNodes(a1);
-		AddAllAcceptNodes(a2);
-		
-		//AddToAlphabet('$');
-		UnionAlphabet(a1);
-		UnionAlphabet(a2);
-	}
-	
-	private void RemoveNode(AutomatonNode node)
-	{
-		nodes.remove(node);
-	}
-	
-	private void Concat(Automaton a1, Automaton a2)
-	{
-		
-		AddAllNodes(a1);
-		AddAllNodes(a2);
-		
-		start = a1.GetStartNode();
-		
 
-		// Connect all accept nodes from a1 to the start of a2
-		for(int i=0; i<a1.GetAcceptNodeCount(); i++)
-		{
-			AutomatonNode n = a1.GetAcceptNode(i);
-			
-			n.AddEdge('$', a2.GetStartNode());
-		}
-		
-		
-		AddAllAcceptNodes(a2);
-		
-		//AddToAlphabet('$');
-		UnionAlphabet(a1);
-		UnionAlphabet(a2);
-	}
-	
-	private void Intersect(Automaton a1, Automaton a2)
-	{
-		/*
-		a1.IdentifyNodes();
-		a2.IdentifyNodes();
-		
-		//start = NewAutomatonNode();
-		int a2count = a2.GetNodeCount();
-		int a1count = a1.GetNodeCount();
-		
-
-		System.out.println("A1 =");
-		a1.ToDot();
-		System.out.println("A2 =");
-		a2.ToDot();
-		
-		AutomatonNode[] intNodes = new AutomatonNode[a1count * a2count];
-
-		
-		//start = NewAutomatonNode();
-		//index[0] = start;
-		IntersectAlphabet(a1, a2);
-		
-	
-		for(int i=0; i<a1count; i++)
-		{
-			for(int j=0; j<a2count; j++)
-			{
-				//AutomatonNode n = new AutomatonNode();
-				
-				AutomatonNode n1 = a1.GetNode(i);
-				AutomatonNode n2 = a2.GetNode(j);
-				
-				int index = n1.GetId()*a2count + n2.GetId();
-
-				//intNodes[index] = n;
-
-				for(int k=0; k<GetAlphabetSize(); k++)
-				{
-					char c = GetAlphabetChar(k);
-
-					AutomatonNode n1next = n1.GetNodeViaTerminal(c);
-					AutomatonNode n2next = n2.GetNodeViaTerminal(c);
-					
-					if (n1next != null && n2next != null)
-					{
-						System.out.println("("+n1.GetId()+","+n2.GetId()+")->("+n1next.GetId()+","+n2next.GetId()+")");
-
-						int nextindex = n1next.GetId()*a2count + n2next.GetId();
-						
-						if (intNodes[nextindex] == null)
-						{
-							intNodes[nextindex] = new AutomatonNode();
-						}
-						
-						if (intNodes[index] == null)
-						{
-							intNodes[index] = new AutomatonNode();
-						}
-						
-						intNodes[index].AddEdge(c, intNodes[nextindex]);
-					}
-				}
-			}
-		}
-		
-		for(int i=0; i<intNodes.length; i++)
-		{
-			if (intNodes[i] != null)
-			{
-				nodes.add(intNodes[i]);
-			}
-		}
-		
-		int index = a1.GetStartNode().GetId()*a2count + a2.GetStartNode().GetId();
-		
-		start = intNodes[index];
-		
-		System.out.println("Start = ("+a1.GetStartNode().GetId()+","+a2.GetStartNode().GetId()+")");
-		*/
-	}
-	
 	public Automaton(char terminal)
 	{
 		Init();
@@ -839,6 +331,476 @@ public class Automaton
 			InitTerminalBase(terminal);
 		}
 	}
+	
+	public void Init()
+	{
+		nodes = new ArrayList();
+		acceptNodes = new ArrayList();
+		alphabet = new ArrayList();
+		
+		InitAlphabet();
+	}
+	
+	
+	public Automaton(boolean t)
+	{
+		Init();
+		
+		/*
+		AutomatonNode q0 = NewAutomatonNode();
+		AutomatonNode q1 = NewAutomatonNode();
+		AutomatonNode q2 = NewAutomatonNode();
+		
+		start = q0;
+		q0.AddEdge('b', q1);
+		q0.AddEdge('$', q2);
+		
+		q1.AddEdge('a', q1);
+		q1.AddEdge('a', q2);
+		q1.AddEdge('b', q2);
+		
+		q2.AddEdge('a', q0);
+		
+		AddToAlphabet('a');
+		AddToAlphabet('b');
+		
+		AddAcceptNode(q0);
+		*/
+		
+		AutomatonNode q0 = NewAutomatonNode();
+		AutomatonNode q1 = NewAutomatonNode();
+		AutomatonNode q2 = NewAutomatonNode();
+		AutomatonNode q3 = NewAutomatonNode();
+		
+		start = q0;
+		q0.AddEdge('a', q1);
+		q0.AddEdge('c', q3);
+		
+		q1.AddEdge('a', q1);
+		q1.AddEdge('c', q2);
+		
+		q2.AddEdge('a', q2);
+		q2.AddEdge('c', q2);
+
+		q3.AddEdge('a', q2);
+		q3.AddEdge('c', q2);
+
+		AddAcceptNode(q2);
+	}
+	
+	
+	public AutomatonNode NewAutomatonNode()
+	{
+		AutomatonNode n = new AutomatonNode();
+		
+		nodes.add(n);
+		
+		return n;
+	}
+	
+	// Calculate which nodes you can directly reach via epsilon edges
+	private AutomatonNodeSet EpsilonDirectReach(AutomatonNode n)
+	{
+		AutomatonNodeSet set = new AutomatonNodeSet();
+		
+		// Basically, just add all the end nodes of the epsilon edges
+		for(int i=0; i<n.GetEpsilonEdgeCount(); i++)
+		{
+			AutomatonEdge e = n.GetEpsilonEdge(i);
+			
+			set.AddNode(e.GetEndNode());
+		}
+		
+		return set;
+	}
+	
+	// Remove all epsilon edges from the automaton
+	public void RemoveEpsilonEdges()
+	{
+		for(int i=0; i<GetNodeCount(); i++)
+		{
+			GetNode(i).ClearEpsilonEdges();
+		}
+	}
+	
+	// Calculate all nodes you can reach via one or more epsilon edges, for all nodes of the automaton
+	private AutomatonNodeSet[] GetEpsilonReachableSet()
+	{
+		// Every node will have a set describing which nodes you can reach via epsilon edges
+		AutomatonNodeSet[] sets = new AutomatonNodeSet[GetNodeCount()];
+		
+		// And so, for each node
+		for(int i=0; i<GetNodeCount(); i++)
+		{
+			AutomatonNode n = GetNode(i);
+
+			// Get the direct reachable nodes via epsilon edges
+			sets[i] = EpsilonDirectReach(n);
+			AutomatonNodeSet set = sets[i];
+			
+			// And add in the direct reachable nodes via epsilon edges, of the newly added nodes
+			// Eventually this will stop because the set's node count is not increased
+			for(int j=0; j<set.GetNodeCount(); j++)
+			{
+				AutomatonNodeSet newset = EpsilonDirectReach(set.GetNode(j));
+				
+				// Take the union (don't add nodes we already have)
+				set.Union(newset);
+			}
+		}
+		
+		return sets;
+	}
+	
+	// By removing all the epsilon edges, we need to fix up all the possible paths that were reachable by epsilon edges
+	public void FixupEpsilons(AutomatonNodeSet[] sets)
+	{
+		// For each node
+		for(int i=0; i<GetNodeCount(); i++)
+		{
+			AutomatonNode n = GetNode(i);
+			
+			// And for each (non-epsilon) edge of that node
+			for(int j=0; j<n.GetEdgeCount(); j++)
+			{
+				AutomatonEdge e = n.GetEdge(j);
+				
+				// Get the end node of that edge, and check which nodes are reachable via one or more epsilon edges
+				AutomatonNodeSet set = sets[e.GetEndNode().GetId()];
+				for(int k=0; k<set.GetNodeCount(); k++)
+				{
+					// And then add edges to that new end node (which was reachable via one or more epsilon edges)
+					n.AddEdge(e.GetTerminal(), set.GetNode(k));
+				}
+			}
+		}		
+	}
+	
+	// Check whether t contains one of the accept nodes
+	public boolean ContainsAcceptNode(AutomatonNodeSet t)
+	{
+		// Now we need to check whether this node was an accept node
+		for(int j=0; j<acceptNodes.size(); j++)
+		{
+			AutomatonNode acceptNode = (AutomatonNode)acceptNodes.get(j);
+			
+			if (t.Contains(acceptNode))
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	// Given a node (which is a set), calculate all direct nodes which are reachable via every symbol of the alphabet,
+	// and recursively do the same for each directly added node
+	// All the added nodes are kept in the powerSet
+	private void DFARecur(ArrayList powerSet, AutomatonNodeSet set)
+	{
+		// All nodes ({a set}) have (alphabet size) edges to other nodes 
+		AutomatonNodeSet[] nextSet  = new AutomatonNodeSet[GetAlphabetSize()];
+		
+		// So initialize these sets to the empty set for now
+		for(int i=0; i<nextSet.length; i++)
+		{
+			nextSet[i] = new AutomatonNodeSet();
+		}
+
+
+		// Calculate the reachable nodes (a nextSet), for each symbol k
+		// This process is easy because all epsilon edges have already been removed and patched up
+		for(int i=0; i<set.GetNodeCount(); i++)
+		{
+			// So for each node of the set, calculate which nodes it can reach
+			AutomatonNode n = set.GetNode(i);
+			
+			for(int j=0; j<n.GetEdgeCount(); j++)
+			{
+				// Do so by checking each edge
+				AutomatonEdge e = n.GetEdge(j);
+				
+				for(int k=0; k<GetAlphabetSize(); k++)
+				{
+					char c = GetAlphabetChar(k);
+					
+					// Add the end node to the corresponding nextSet
+					if (e.GetTerminal() == c)
+						nextSet[k].AddNode(e.GetEndNode());
+				}
+			}
+		}
+		
+		// The powerNode is a single AutomatonNode representing a whole {set of nodes} 
+		AutomatonNode parentPowerNode = set.GetPowerNode();
+		
+		// So we need to add an edge from the parentPowerNode to each of its child powernodes
+		for(int k=0; k<GetAlphabetSize(); k++)
+		{
+			// We need to check if the nextSet already exists in the powerSet 
+			boolean found = false;
+			for(int i=0; i<powerSet.size(); i++)
+			{
+				AutomatonNodeSet t = (AutomatonNodeSet)powerSet.get(i);
+				
+				// Does it exist already?
+				if (nextSet[k].Equals(t))
+				{
+					// Yes, so simply copy the reference to its real powernode
+					found = true;
+					nextSet[k].SetPowerNode(t.GetPowerNode());
+					break;
+				}
+			}
+			
+			// Not found?
+			if (!found)
+			{
+				// Create a new node, and add the set to the powerSet
+				nextSet[k].SetPowerNode(new AutomatonNode());
+				powerSet.add(nextSet[k]);
+				
+				// Does the nextSet contain an accept node?
+				if (ContainsAcceptNode(nextSet[k]))
+				{
+					// Then make the powerNode an accept node
+					nextSet[k].GetPowerNode().SetAccept();
+				}
+				
+				// Recur on the newly added node, this will eventually stop when all reachable nodes have been added 
+				DFARecur(powerSet, nextSet[k]);
+			}
+			
+			// Now simply add an edge from the parent to the child
+			// and this is done for each symbol of the alphabet
+			AutomatonNode childPowerNode = nextSet[k].GetPowerNode(); 
+			
+			parentPowerNode.AddEdge(GetAlphabetChar(k), childPowerNode);
+		}
+		
+	}
+	
+	public void ToDFA()
+	{
+		// Give each node a unique id, by their index (very important)
+		IdentifyNodes();
+		
+		// Calculate which nodes are reachable via one or more epsilon edge
+		AutomatonNodeSet[] sets = GetEpsilonReachableSet();
+		
+		// Remove them
+		RemoveEpsilonEdges();
+		
+		// Fix them up
+		FixupEpsilons(sets);
+		
+		// Get the nodes reachable via one or more epsilon-edges by the start node
+		AutomatonNodeSet startSet = sets[start.GetId()];
+		// add the start node itself to it
+		startSet.AddNode(start);
+		
+		
+		// Init the powerSet
+		ArrayList powerSet = new ArrayList();
+		
+		// Init the DFA start node
+		AutomatonNode dfaStart = new AutomatonNode();
+		startSet.SetPowerNode(dfaStart);
+		
+		// If the startSet contains an accept node
+		if (ContainsAcceptNode(startSet))
+		{
+			// make the powernode an accept node
+			dfaStart.SetAccept();
+		}
+		
+		// Add the startSet to the powerSet
+		powerSet.add(startSet);
+		
+		// Now find all nodes reachable by the start node
+		// When it ends, it will have created a DFA
+		DFARecur(powerSet, startSet);
+		
+		// Now we want to copy all the DFA's powerNodes to this automaton
+		
+		// First clear all nodes and acceptNodes of this automaton
+		nodes.clear();
+		acceptNodes.clear();
+		
+		// Start adding nodes
+		for(int i=0; i<powerSet.size(); i++)
+		{
+			AutomatonNodeSet t = (AutomatonNodeSet)powerSet.get(i);
+			
+			AutomatonNode node = t.GetPowerNode();
+			
+			// Add powernode to this automaton
+			nodes.add(node);
+			
+			// Acceptnode?
+			if (node.IsAccepted())
+			{
+				acceptNodes.add(node);
+			}
+		}
+		
+		start = dfaStart;
+		
+		// All done now
+	}
+	
+	public boolean Run(String s)
+	{
+		ToDFA();
+		
+		AutomatonNode r = start;
+		
+		for(int i=0; i<s.length(); i++)
+		{
+			char c = s.charAt(i);
+			
+			r = r.GetNodeViaTerminal(c);
+			
+			if (r == null)
+				return false;
+		}
+		
+		return r.IsAccepted();
+	}
+	
+	private int GetAlphabetSize()
+	{
+		return alphabet.size();
+	}
+	
+	private char GetAlphabetChar(int i)
+	{
+		return ((Character)alphabet.get(i)).charValue();
+	}
+	
+	private void InitAlphabet()
+	{
+		alphabet.add(new Character('a'));
+		alphabet.add(new Character('b'));
+		alphabet.add(new Character('c'));
+		alphabet.add(new Character('d'));
+	}
+
+	
+	private void Kleene(Automaton a)
+	{
+		start = NewAutomatonNode();
+
+		AddAcceptNode(start);
+		
+		AddAllNodes(a);
+		
+		start.AddEdge('$', a.GetStartNode());
+		
+		for(int i=0; i<a.GetAcceptNodeCount(); i++)
+		{
+			AutomatonNode n = a.GetAcceptNode(i);
+			
+			n.AddEdge('$', a.GetStartNode());
+		}
+	}
+	
+	private void Complement(Automaton a)
+	{
+		a.ToDFA();
+		
+		AddAllNodes(a);
+		
+		acceptNodes.clear();
+		
+		start = a.start;
+		
+		for(int i=0; i<GetNodeCount(); i++)
+		{
+			AutomatonNode node = GetNode(i);
+			
+			if (node.IsAccepted())
+			{
+				node.UnsetAccept();
+			}
+			else
+			{
+				AddAcceptNode(node);
+			}
+		}
+	}
+	
+	
+	
+	private AutomatonNode GetStartNode()
+	{
+		return start;
+	}
+	
+	private void AddAllNodes(Automaton a)
+	{
+		for(int i=0; i<a.GetNodeCount(); i++)
+		{
+			AutomatonNode n = a.GetNode(i);
+			
+			nodes.add(n);
+			
+			if (n.IsAccepted())
+			{
+				acceptNodes.add(n);
+			}
+		}
+	}
+	
+	
+	private void Union(Automaton a1, Automaton a2)
+	{
+		start = NewAutomatonNode();
+		
+		AddAllNodes(a1);
+		AddAllNodes(a2);
+		
+		
+		start.AddEdge('$', a1.GetStartNode());
+		start.AddEdge('$', a2.GetStartNode());
+	}
+	
+	private void Concat(Automaton a1, Automaton a2)
+	{
+		AddAllNodes(a1);
+		
+		for(int i=0; i<GetAcceptNodeCount(); i++)
+		{
+			AutomatonNode n = GetAcceptNode(i);
+			
+			n.UnsetAccept();
+		}
+		acceptNodes.clear();
+		
+		AddAllNodes(a2);
+		
+		start = a1.GetStartNode();
+		
+
+		// Connect all accept nodes from a1 to the start of a2
+		for(int i=0; i<a1.GetAcceptNodeCount(); i++)
+		{
+			AutomatonNode n = a1.GetAcceptNode(i);
+			
+			n.AddEdge('$', a2.GetStartNode());
+		}
+	}
+	
+	private void Intersect(Automaton a1, Automaton a2)
+	{
+		Automaton c1 = new Automaton('<', a1);
+		Automaton c2 = new Automaton('<', a2);
+		Automaton u = new Automaton('|', c1, c2);
+		
+		// A ^ B = (Ac U Bc)c
+		Complement(u);
+	}
+	
 
 	private void InitEmptySetBase()
 	{
@@ -853,8 +815,6 @@ public class Automaton
 		start.AddEdge(terminal, n);
 		
 		AddAcceptNode(n);
-		
-		AddToAlphabet(terminal);
 	}
 	
 	private void InitEmptyStringBase()
@@ -865,6 +825,7 @@ public class Automaton
 	
 	private void AddAcceptNode(AutomatonNode n)
 	{
+		n.SetAccept();
 		acceptNodes.add(n);
 	}
 	
@@ -916,15 +877,7 @@ public class Automaton
 	
 	private boolean IsAcceptNode(AutomatonNode node)
 	{
-		for(int i=0; i<GetAcceptNodeCount(); i++)
-		{
-			if (GetAcceptNode(i) == node)
-			{
-				return true;
-			}
-		}
-		
-		return false;
+		return node.IsAccepted();
 	}
 	
 	private String IdentifiersToDot()
