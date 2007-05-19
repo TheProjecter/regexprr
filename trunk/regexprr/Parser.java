@@ -1,6 +1,6 @@
-class ParseException extends Exception
+class SyntaxException extends Exception
 {
-	public ParseException(String msg)
+	public SyntaxException(String msg)
 	{
 		super(msg);
 	}
@@ -15,7 +15,7 @@ public class Parser
 	private int[][][] M;
 	private int[][][] R;
 	
-	public Parser(String pattern) throws ParseException
+	public Parser(String pattern) throws SyntaxException
 	{
 		InitGrammar();
 		parseBinaryTree = CYK(pattern);
@@ -70,7 +70,7 @@ public class Parser
 	}
 
  
-	private BinaryTree CYK(String pattern) throws ParseException
+	private BinaryTree CYK(String pattern) throws SyntaxException
 	{
 		int n = pattern.length();
 		int varCount = grammar.GetVarCount();
@@ -133,7 +133,7 @@ public class Parser
 		
 		if (!validExpression)
 		{
-			throw new ParseException("Not a regular expression");
+			throw new SyntaxException("Not a regular expression");
 		}
 		
 		BinaryTree tree = new BinaryTree();
