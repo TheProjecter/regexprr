@@ -4,24 +4,14 @@ class AutomatonNodeSet
 {
 	private ArrayList nodes;
 	private AutomatonNode powerNode;
-	private int id;
 	
 	public AutomatonNodeSet()
 	{
 		nodes = new ArrayList();
 		powerNode = null;
 	}
-	
-	public void SetId(int i)
-	{
-		id = i;
-	}
-	
-	public int GetId()
-	{
-		return id;
-	}
 
+	// Convert set to a readable string like {0, 1, 2}
 	public String ToString()
 	{
 		String s = "{";
@@ -48,7 +38,8 @@ class AutomatonNodeSet
 	{
 		return (AutomatonNode)nodes.get(i);
 	}
-	
+
+	// Check if this set contains a specific node
 	public boolean Contains(AutomatonNode node)
 	{
 		for(int i=0; i<GetNodeCount(); i++)
@@ -60,6 +51,7 @@ class AutomatonNodeSet
 		return false;
 	}
 	
+	// Check if two sets are equal
 	public boolean Equals(AutomatonNodeSet b)
 	{
 		if (b.GetNodeCount() != GetNodeCount())
@@ -74,6 +66,7 @@ class AutomatonNodeSet
 		return true;
 	}
 	
+	// Construct the union of this set with another sets, return true if something new was added
 	public boolean Union(AutomatonNodeSet set)
 	{
 		boolean addedSomething = false;
@@ -91,6 +84,7 @@ class AutomatonNodeSet
 		return addedSomething;
 	}
 	
+	// Add node to the set
 	public boolean AddNode(AutomatonNode node)
 	{
 		if (!Contains(node))
@@ -103,6 +97,7 @@ class AutomatonNodeSet
 		return false;
 	}
 	
+	// Powernode is a single node representing this set
 	public void SetPowerNode(AutomatonNode n)
 	{
 		powerNode = n;
@@ -125,11 +120,13 @@ class AutomatonEdge
 		node = n;
 	}
 	
+	// Get the edge's terminal or label
 	public char GetTerminal()
 	{
 		return terminal;
 	}
 	
+	// Get the egde end node
 	public AutomatonNode GetEndNode()
 	{
 		return node;
@@ -149,31 +146,37 @@ class AutomatonNode
 		epsilonEdges = new ArrayList();
 	}
 	
+	// Make this an accept node
 	public void SetAccept()
 	{
 		accept = true;
 	}
 	
+	// Make this a non-accept node
 	public void UnsetAccept()
 	{
 		accept = false;
 	}
 	
+	// Is this an accept node?
 	public boolean IsAccepted()
 	{
 		return accept;
 	}
 	
+	// Clear all epsilon edges from this node
 	public void ClearEpsilonEdges()
 	{
 		epsilonEdges.clear();
 	}
 	
+	// Get number of non-epsilon edges
 	public int GetEdgeCount()
 	{
 		return edges.size();
 	}
 
+	// Get number of epsilon edges
 	public int GetEpsilonEdgeCount()
 	{
 		return epsilonEdges.size();
@@ -190,6 +193,7 @@ class AutomatonNode
 		return (AutomatonEdge)epsilonEdges.get(i);
 	}
 	
+	// Does this node contain a specific edge? 
 	private boolean ContainsEdge(char terminal, AutomatonNode n)
 	{
 		for(int i=0; i<GetEdgeCount(); i++)
@@ -203,6 +207,7 @@ class AutomatonNode
 		return false;
 	}
 	
+	// Or a specific epsilon edge?
 	private boolean ContainsEpsilonEdge(AutomatonNode n)
 	{
 		for(int i=0; i<GetEpsilonEdgeCount(); i++)
@@ -216,6 +221,7 @@ class AutomatonNode
 		return false;
 	}
 	
+	// Add new edge, if it doesn't exist yet
 	public void AddEdge(char terminal, AutomatonNode n)
 	{
 		if (terminal == '$')
@@ -234,6 +240,7 @@ class AutomatonNode
 		}
 	}
 	
+	// Id operations for this node
 	public void SetId(int i)
 	{
 		id = i;
@@ -244,6 +251,8 @@ class AutomatonNode
 		return id;
 	}
 	
+	// Get the end node, by following an edge with a specific terminal or label
+	// Return null when no such edge exists
 	public AutomatonNode GetNodeViaTerminal(char terminal)
 	{
 		for(int i=0; i<GetEdgeCount(); i++)
@@ -270,6 +279,7 @@ public class Automaton
 		Init();
 	}
 	
+	// Unary automaton operations
 	public Automaton(char operation, Automaton a)
 	{
 		Init();
@@ -288,7 +298,7 @@ public class Automaton
 	}
 	
 
-	
+	// Binary automaton operations
 	public Automaton(char operation, Automaton a1, Automaton a2)
 	{
 		Init();
@@ -310,6 +320,7 @@ public class Automaton
 	}
 	
 
+	// Base automaton
 	public Automaton(char terminal)
 	{
 		Init();
@@ -317,17 +328,17 @@ public class Automaton
 		
 		if (terminal == '@')
 		{
-			// do nothing, already have an empty set automaton
+			// Create an empty set automaton
 			InitEmptySetBase();
 		}
 		else if (terminal == '$')
 		{
-			// set the empty string automaton
+			// Create the empty string automaton
 			InitEmptyStringBase();
 		}
 		else
 		{
-			// set terminal automaton
+			// Create terminal automaton
 			InitTerminalBase(terminal);
 		}
 	}
@@ -339,53 +350,6 @@ public class Automaton
 		alphabet = new ArrayList();
 		
 		InitAlphabet();
-	}
-	
-	
-	public Automaton(boolean t)
-	{
-		Init();
-		
-		/*
-		AutomatonNode q0 = NewAutomatonNode();
-		AutomatonNode q1 = NewAutomatonNode();
-		AutomatonNode q2 = NewAutomatonNode();
-		
-		start = q0;
-		q0.AddEdge('b', q1);
-		q0.AddEdge('$', q2);
-		
-		q1.AddEdge('a', q1);
-		q1.AddEdge('a', q2);
-		q1.AddEdge('b', q2);
-		
-		q2.AddEdge('a', q0);
-		
-		AddToAlphabet('a');
-		AddToAlphabet('b');
-		
-		AddAcceptNode(q0);
-		*/
-		
-		AutomatonNode q0 = NewAutomatonNode();
-		AutomatonNode q1 = NewAutomatonNode();
-		AutomatonNode q2 = NewAutomatonNode();
-		AutomatonNode q3 = NewAutomatonNode();
-		
-		start = q0;
-		q0.AddEdge('a', q1);
-		q0.AddEdge('c', q3);
-		
-		q1.AddEdge('a', q1);
-		q1.AddEdge('c', q2);
-		
-		q2.AddEdge('a', q2);
-		q2.AddEdge('c', q2);
-
-		q3.AddEdge('a', q2);
-		q3.AddEdge('c', q2);
-
-		AddAcceptNode(q2);
 	}
 	
 	
@@ -649,12 +613,14 @@ public class Automaton
 		// All done now
 	}
 	
+	// Execute automaton on a string
 	public boolean Run(String s)
 	{
 		ToDFA();
 		
 		AutomatonNode r = start;
 		
+		// Follow which nodes it goes through
 		for(int i=0; i<s.length(); i++)
 		{
 			char c = s.charAt(i);
@@ -767,8 +733,10 @@ public class Automaton
 	
 	private void Concat(Automaton a1, Automaton a2)
 	{
+		// Add all nodes from a1
 		AddAllNodes(a1);
 		
+		// All nodes of a1 must be non-accept nodes
 		for(int i=0; i<GetAcceptNodeCount(); i++)
 		{
 			AutomatonNode n = GetAcceptNode(i);
@@ -777,6 +745,7 @@ public class Automaton
 		}
 		acceptNodes.clear();
 		
+		//Add all nodes from a2
 		AddAllNodes(a2);
 		
 		start = a1.GetStartNode();

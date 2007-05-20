@@ -165,14 +165,18 @@ public class Parser
 			
 			operator = n.GetRight().GetLeft();
 
+			// Did we get past parentheses?
 			while(operator != null && operator.GetLeft() != null && operator.GetRight() != null)
 			{
-					left = operator.GetLeft();
-					right = operator.GetRight().GetRight();
-					
-					operator = operator.GetRight().GetLeft();
+				// Yes, so calculate new left and right
+				left = operator.GetLeft();
+				right = operator.GetRight().GetRight();
+				
+				// And also new operator
+				operator = operator.GetRight().GetLeft();
 			}
 			
+			// Terminal node with possibly one child, keep going left until no more childs
 			while(operator != null && operator.GetLeft() != null)
 			{
 				operator = operator.GetLeft();
@@ -188,6 +192,7 @@ public class Parser
 				ConvertToExpressionBinaryTree(left);
 				ConvertToExpressionBinaryTree(right);
 				
+				// left and right must not be parentheses
 				if (left != null && left.GetLabel() == '(')
 					n.SetLeft(null);
 				if (right != null && right.GetLabel() == ')')
@@ -196,6 +201,7 @@ public class Parser
 		}
 		else
 		{
+			// Possible terminal node with one child, keep going left until we reach the terminal
 			BinaryNode terminal = n;
 			
 			while(terminal.GetLeft() != null)

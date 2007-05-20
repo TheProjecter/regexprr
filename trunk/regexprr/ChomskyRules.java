@@ -1,13 +1,3 @@
-/*
- * ChomskyRules.java
- *
- * Created on 13 mei 2007, 22:00
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
-
-
 import java.util.*;
 
 class ChomskyVarList
@@ -79,13 +69,15 @@ class ChomskyTwoVar
 {
     private int varHeadIndex, varLeftIndex, varRightIndex;
     
+    // (head)->(left)(right)
+    
     public ChomskyTwoVar(int nVarHeadIndex, int nVarLeftIndex, int nVarRightIndex)
     {
         varHeadIndex = nVarHeadIndex;
         varLeftIndex = nVarLeftIndex;
         varRightIndex = nVarRightIndex;
     }
-    
+
     public int GetVarHeadIndex()
     {
         return varHeadIndex;
@@ -102,18 +94,15 @@ class ChomskyTwoVar
     }
 }
 
-/**
- *
- * @author neimod
- */
+
 public class ChomskyRules 
 {
-    private ChomskyVarList varList;
-    private ArrayList terminalList;
-    private ArrayList twoVarList;
-    int startIndex;
+    private ChomskyVarList varList;	// list of all variables
+    private ArrayList terminalList; // list of all terminal rules A->a
+    private ArrayList twoVarList; 	// list of all twovar rules A->BC
+    int startIndex;	// start index
     
-    /** Creates a new instance of ChomskyRules */
+
     public ChomskyRules() 
     {
         varList = new ChomskyVarList();
@@ -152,11 +141,13 @@ public class ChomskyRules
         return (ChomskyTwoVar)twoVarList.get(twoVarRuleIndex);
     }
     
+    // Add new variable symbol
     public void AddVar(char varName)
     {
         varList.AddVar(varName);
     }
     
+    // Check if a string contains "->"
     private boolean HasArrow(String rule)
     {
         if (rule.length() > 3 && rule.charAt(1) == '-' && rule.charAt(2) == '>')
@@ -165,6 +156,7 @@ public class ChomskyRules
             return false;
     }
     
+    // Check if the grammar has a rule (varindex)->terminal
     public boolean IsRule(int varIndex, char terminal)
     {
     	int terminalCount = terminalList.size();
@@ -182,6 +174,7 @@ public class ChomskyRules
         return false;
     }
     
+    // Add a new rule
     public void AddRule(String rule)
     {
         // We only allow 2 kind of basic rules:
@@ -191,6 +184,7 @@ public class ChomskyRules
         // A rule can be made up out of multiple basic rules like so:
         // A->BC/a/FG/...
 
+    	// Cut up the string by /
         StringTokenizer st = new StringTokenizer(rule,"/");
         
         if (!st.hasMoreTokens())
@@ -200,6 +194,7 @@ public class ChomskyRules
             return;
         }
         
+        // A rule A->BC/c is split up into a head rule A->BC, and a subrule c
         String headRule = st.nextToken();
         
         if (!HasArrow(headRule))
@@ -218,11 +213,13 @@ public class ChomskyRules
             return;
         }
         
+        // First rule added, that makes this the start rule
         if (-1 == startIndex)
         {
         	startIndex = varHeadIndex;
         }
 
+        // Check whether we are dealing with terminal rule or twovar rule
         boolean terminalRule = false;
         if (headRule.length() == 4)
             terminalRule = true;
@@ -235,12 +232,14 @@ public class ChomskyRules
 
         if (terminalRule)
         {
+        	// Get terminal symbol
             char terminal = headRule.charAt(3);
 
             terminalList.add(new ChomskyTerminal(varHeadIndex, terminal));
         }
         else
         {
+        	// Get left and right symbols
             char varLeftName = headRule.charAt(3);
             char varRightName = headRule.charAt(4);
             
@@ -259,10 +258,12 @@ public class ChomskyRules
             }
         }   
         
+        // Now keep adding subrules
         while (st.hasMoreTokens()) 
         {
             String subrule = st.nextToken();
             
+            // Check whether this is a terminal rule or twovar rule
             terminalRule = false;
             if (subrule.length() == 1)
                 terminalRule = true;
@@ -301,6 +302,7 @@ public class ChomskyRules
         }
     }
     
+    // Help functions to turn the grammar into strings
     public String TerminalRuleToString(ChomskyTerminal t)
     {
 		char varName = varList.GetVar(t.GetVarIndex());
